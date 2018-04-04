@@ -7,6 +7,6 @@ import Prelude
 
 main :: IO ()
 main = do
-    decks <- SD.enumerateStreamDecks
     _     <- Opts.getOpts
-    putStrLn decks
+    decks <- SD.enumerateStreamDecks
+    putStrLn $ decks >>= show
