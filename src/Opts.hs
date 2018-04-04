@@ -14,8 +14,8 @@ import qualified System.Exit        as Sys (exitSuccess)
 import qualified System.IO          as IO  (hPutStrLn, stderr)
 import qualified Text.Printf        as P   (printf)
 
-data Options = Options { optVerbose  :: Bool -- Verbosity
-                       }
+newtype Options = Options { optVerbose  :: Bool -- Verbosity
+                          }
 
 showUDev :: Options -> IO Options
 showUDev _ = do

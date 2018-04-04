@@ -24,7 +24,7 @@ productID = 0x0060
 --            , usage = 13359
 --            , interfaceNumber = 0
 --            }
-enumerateStreamDecks :: IO [Char]
+enumerateStreamDecks :: IO String
 enumerateStreamDecks = do
     decks <- HID.enumerate (Just vendorID) (Just productID)
     return $ decks >>= show
