@@ -51,6 +51,6 @@ enumerateStreamDecks = HID.enumerate (Just vendorID) (Just productID)
 openStreamDeck :: HID.DeviceInfo -> IO Deck
 openStreamDeck device = HID.withHIDAPI $ do
     deck <- HID.openDeviceInfo device
-    return $ Deck { ref = deck
-                  , state = []
-                  }
+    return Deck { ref = deck
+                , state = []
+                }
