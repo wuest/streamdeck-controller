@@ -74,15 +74,17 @@ initializationReport = BS.pack [ 0x05                   -- Report 0x05
                                , 0x00, 0x00, 0x00, 0x00
                                ]
 
-send :: Deck -> BS.ByteString -> IO Int
+send :: Deck -> BS.ByteString -> IO ()
 send deck bs = 
     case BS.length bs > packetSize of
         True -> do
             _ <- HID.write (ref deck) $ BS.take packetSize bs
             send deck $ BS.drop packetSize bs
-        False -> HID.write (ref deck) bs
+        False -> do
+            _ <- HID.write (ref deck) bs
+            return ()
 
-writePage :: Deck -> Int -> DW.Word8 -> BS.ByteString -> IO Int
+writePage :: Deck -> Int -> DW.Word8 -> BS.ByteString -> IO ()
 writePage deck p i bs = send deck $ BS.append (page p i) bs
 
 page :: Int -> DW.Word8 -> BS.ByteString
