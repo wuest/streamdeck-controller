@@ -31,6 +31,7 @@ type Image = BS.ByteString
 
 data Action = URLAction String
             | ShellAction String
+            | NoAction
 
 vendorID :: DW.Word16
 vendorID  = 0x0fd9
@@ -41,10 +42,34 @@ productID = 0x0060
 packetSize :: Int
 packetSize = 4096
 
+solidRGB :: DW.Word8 -> DW.Word8 -> DW.Word8 -> Image
+solidRGB r g b = BS.pack $ take (3 * 72 * 72) $ cycle [b, g, r]
+
+defaultPage :: Page
+defaultPage = Page ( Row ( Item { image = solidRGB 255 0 0, action = NoAction }
+                         , Item { image = solidRGB 204 0 0, action = NoAction }
+                         , Item { image = solidRGB 153 0 0, action = NoAction }
+                         , Item { image = solidRGB 102 0 0, action = NoAction }
+                         , Item { image = solidRGB  51 0 0, action = NoAction }
+                         )
+                   , Row ( Item { image = solidRGB 0 255 0, action = NoAction }
+                         , Item { image = solidRGB 0 204 0, action = NoAction }
+                         , Item { image = solidRGB 0 153 0, action = NoAction }
+                         , Item { image = solidRGB 0 102 0, action = NoAction }
+                         , Item { image = solidRGB 0  51 0, action = NoAction }
+                         )
+                   , Row ( Item { image = solidRGB 0 0 255, action = NoAction }
+                         , Item { image = solidRGB 0 0 204, action = NoAction }
+                         , Item { image = solidRGB 0 0 153, action = NoAction }
+                         , Item { image = solidRGB 0 0 102, action = NoAction }
+                         , Item { image = solidRGB 0 0  51, action = NoAction }
+                         )
+                   )
+
 initializationReport :: BS.ByteString
 initializationReport = BS.pack [ 0x05                   -- Report 0x05
-                               , 0x55, 0xAA, 0xD1, 0x01 -- Command
-                               , 0x63, 0x00, 0x00, 0x00 -- 0x63 (99)% brightness
+                               , 0x55, 0xAA, 0xD1, 0x01 -- Command (brightness)
+                               , 0x63, 0x00, 0x00, 0x00 -- 0x63 (99%)
                                , 0x00, 0x00, 0x00, 0x00
                                , 0x00, 0x00, 0x00, 0x00
                                ]
@@ -97,5 +122,5 @@ openStreamDeck :: HID.DeviceInfo -> IO Deck
 openStreamDeck device = HID.withHIDAPI $ do
     deck <- HID.openDeviceInfo device
     return Deck { ref = deck
-                , state = []
+                , state = [defaultPage]
                 }
