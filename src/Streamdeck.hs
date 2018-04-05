@@ -89,27 +89,26 @@ initializationReport = BS.pack [ 0x05                   -- Report 0x05
 
 send :: Deck -> BS.ByteString -> IO ()
 send deck bs =
-    case BS.length bs > packetSize of
-        True -> do
-            l <- HID.write (ref deck) $ BS.take packetSize bs
-            send deck $ fixContinuationPacket bs
-        False -> do
-            l <- HID.write (ref deck) bs
-            return ()
+    if BS.length bs > packetSize then
+        (do l <- HID.write (ref deck) $ BS.take packetSize bs
+            send deck $ fixContinuationPacket bs)
+    else
+        (do l <- HID.write (ref deck) bs
+            return ())
 
 -- In cases where the first byte of a continuation packet is unset, the byte is
 -- discarded, resulting in discoloration
 fixContinuationPacket :: BS.ByteString -> BS.ByteString
 fixContinuationPacket b =
     let as = BS.unpack $ BS.drop packetSize b
-        bs = BS.pack $ ((B..|.) 1 (as !! 0)):(drop 1 as)
+        bs = BS.pack $ (B..|.) 1 (head as) : drop 1 as
     in bs
 
 writePage :: Deck -> Int -> DW.Word8 -> BS.ByteString -> IO ()
 writePage deck p i bs = send deck $ BS.append (page p i) bs
 
 page :: Int -> DW.Word8 -> BS.ByteString
-page 1 i = BS.pack [ 0x02, 0x01, 0x01, 0x00, 0x00, (i+1), 0x00, 0x00
+page 1 i = BS.pack [ 0x02, 0x01, 0x01, 0x00, 0x00,  i+1, 0x00, 0x00
                    , 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
                    , 0x42, 0x4d, 0xf6, 0x3c, 0x00, 0x00, 0x00, 0x00
                    , 0x00, 0x00, 0x36, 0x00, 0x00, 0x00, 0x28, 0x00
@@ -119,13 +118,13 @@ page 1 i = BS.pack [ 0x02, 0x01, 0x01, 0x00, 0x00, (i+1), 0x00, 0x00
                    , 0x00, 0x00, 0xc4, 0x0e, 0x00, 0x00, 0x00, 0x00
                    , 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
 
-page 2 i = BS.pack [ 0x02, 0x01, 0x02, 0x00, 0x01, (i+1), 0x00, 0x00
+page 2 i = BS.pack [ 0x02, 0x01, 0x02, 0x00, 0x01,  i+1, 0x00, 0x00
                    , 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
 
 page _ _ = BS.pack []
 
 read :: Deck -> Int -> IO BS.ByteString
-read deck c = HID.read (ref deck) c
+read deck = HID.read (ref deck)
 
 writeImage :: Deck -> DW.Word8 -> Image -> IO ()
 writeImage deck button img =
@@ -173,5 +172,5 @@ drawPage d (Page (r0, r1, r2)) = do
 -- TODO
 updateDeck :: Deck -> (DeckState -> DeckState) -> IO Deck
 updateDeck d _ = do
-    drawPage d $ (state d) !! 0
+    drawPage d $ head $ state d
     return d

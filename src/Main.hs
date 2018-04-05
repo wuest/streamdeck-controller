@@ -9,7 +9,7 @@ main :: IO ()
 main = do
     _     <- Opts.getOpts
     decks <- SD.enumerateStreamDecks
-    deck  <- SD.openStreamDeck $ decks !! 0
+    deck  <- SD.openStreamDeck $ head decks
     SD.send deck SD.initializationReport
     SD.updateDeck deck id
     putStrLn $ decks >>= show
