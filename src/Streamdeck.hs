@@ -5,8 +5,12 @@ module Streamdeck ( Deck (..)
                   , initializationReport
                   , send, Streamdeck.read
                   , writePage
+                  , writeImage
+                  , solidRGB
+                  , updateDeck
                   ) where
 
+import qualified Data.Bits       as B
 import qualified Data.ByteString as BS
 import qualified Data.Word       as DW   (Word16, Word8)
 import qualified System.HIDAPI   as HID
@@ -42,8 +46,17 @@ productID = 0x0060
 packetSize :: Int
 packetSize = 4096
 
+page1Pixels :: Int
+page1Pixels = 2583
+
+page2Pixels :: Int
+page2Pixels = 2601
+
+buttonPixels :: Int
+buttonPixels = page1Pixels + page2Pixels
+
 solidRGB :: DW.Word8 -> DW.Word8 -> DW.Word8 -> Image
-solidRGB r g b = BS.pack $ take (3 * 72 * 72) $ cycle [b, g, r]
+solidRGB r g b = BS.pack $ take (3 * (buttonPixels - 1)) $ cycle [b, g, r]
 
 defaultPage :: Page
 defaultPage = Page ( Row ( Item { image = solidRGB 255 0 0, action = NoAction }
@@ -75,14 +88,22 @@ initializationReport = BS.pack [ 0x05                   -- Report 0x05
                                ]
 
 send :: Deck -> BS.ByteString -> IO ()
-send deck bs = 
+send deck bs =
     case BS.length bs > packetSize of
         True -> do
-            _ <- HID.write (ref deck) $ BS.take packetSize bs
-            send deck $ BS.drop packetSize bs
+            l <- HID.write (ref deck) $ BS.take packetSize bs
+            send deck $ fixContinuationPacket bs
         False -> do
-            _ <- HID.write (ref deck) bs
+            l <- HID.write (ref deck) bs
             return ()
+
+-- In cases where the first byte of a continuation packet is unset, the byte is
+-- discarded, resulting in discoloration
+fixContinuationPacket :: BS.ByteString -> BS.ByteString
+fixContinuationPacket b =
+    let as = BS.unpack $ BS.drop packetSize b
+        bs = BS.pack $ ((B..|.) 1 (as !! 0)):(drop 1 as)
+    in bs
 
 writePage :: Deck -> Int -> DW.Word8 -> BS.ByteString -> IO ()
 writePage deck p i bs = send deck $ BS.append (page p i) bs
@@ -106,6 +127,14 @@ page _ _ = BS.pack []
 read :: Deck -> Int -> IO BS.ByteString
 read deck c = HID.read (ref deck) c
 
+writeImage :: Deck -> DW.Word8 -> Image -> IO ()
+writeImage deck button img =
+    let page1 = BS.take (3 * page1Pixels) img
+        page2 = BS.take (3 * page2Pixels) $ BS.drop (3 * page1Pixels) img
+    in do
+        writePage deck 1 button page1
+        writePage deck 2 button page2
+
 -- DeviceInfo { path = "/dev/hidraw%d"
 --            , vendorId = 4057
 --            , produc tId = 96
@@ -126,3 +155,23 @@ openStreamDeck device = HID.withHIDAPI $ do
     return Deck { ref = deck
                 , state = [defaultPage]
                 }
+
+drawRow :: Deck -> DW.Word8 -> Row -> IO ()
+drawRow d r (Row (i0, i1, i2, i3, i4)) = do
+    writeImage d (r * 5) $ image i0
+    writeImage d (r * 5 + 1) $ image i1
+    writeImage d (r * 5 + 2) $ image i2
+    writeImage d (r * 5 + 3) $ image i3
+    writeImage d (r * 5 + 4) $ image i4
+
+drawPage :: Deck -> Page -> IO ()
+drawPage d (Page (r0, r1, r2)) = do
+    drawRow d 0 r0
+    drawRow d 1 r1
+    drawRow d 2 r2
+
+-- TODO
+updateDeck :: Deck -> (DeckState -> DeckState) -> IO Deck
+updateDeck d _ = do
+    drawPage d $ (state d) !! 0
+    return d
