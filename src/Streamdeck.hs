@@ -90,19 +90,22 @@ initializationReport = BS.pack [ 0x05                   -- Report 0x05
 send :: Deck -> BS.ByteString -> IO ()
 send deck bs =
     if BS.length bs > packetSize then
-        (do l <- HID.write (ref deck) $ BS.take packetSize bs
+        (do _ <- HID.write (ref deck) $ BS.take packetSize bs
             send deck $ fixContinuationPacket bs)
     else
-        (do l <- HID.write (ref deck) bs
+        (do _ <- HID.write (ref deck) bs
             return ())
 
 -- In cases where the first byte of a continuation packet is unset, the byte is
 -- discarded, resulting in discoloration
 fixContinuationPacket :: BS.ByteString -> BS.ByteString
-fixContinuationPacket b =
-    let as = BS.unpack $ BS.drop packetSize b
-        bs = BS.pack $ (B..|.) 1 (head as) : drop 1 as
-    in bs
+fixContinuationPacket b
+    | BS.length b < packetSize = BS.pack []
+    | otherwise =
+        let rest = BS.drop packetSize b
+            byte = BS.head rest
+        in if byte > 0 then rest
+                       else BS.cons ((B..|.) 1 byte) (BS.drop 1 rest)
 
 writePage :: Deck -> Int -> DW.Word8 -> BS.ByteString -> IO ()
 writePage deck p i bs = send deck $ BS.append (page p i) bs
