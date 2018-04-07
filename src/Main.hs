@@ -1,9 +1,7 @@
 module Main where
 
-import qualified Text.Printf as P
 import qualified Opts
 import qualified Streamdeck as SD
-import qualified Data.ByteString as BS
 
 import Prelude
 

@@ -134,7 +134,7 @@ read :: Deck -> Int -> IO BS.ByteString
 read deck = HID.read (ref deck)
 
 emptyActiveMap :: ActiveMap
-emptyActiveMap = ActiveMap $ take 15 $ cycle [False]
+emptyActiveMap = ActiveMap $ replicate 15 False
 
 -- Stream Deck reports button state ONLY upon button press/release
 -- Stream Deck will send a 16 byte message, with the following format:
@@ -152,9 +152,8 @@ bytesToActiveMap xs
     | length xs /= 16 = emptyActiveMap
     | otherwise = ActiveMap $ map (== 1) $ drop 1 xs
 
--- TODO: This is a sin, fix it in the future
 buttonPressed :: Deck -> Int -> Bool
-buttonPressed deck i = buttonPressed' (activeMap deck) i
+buttonPressed deck = buttonPressed' (activeMap deck)
 
 buttonPressed' :: ActiveMap -> Int -> Bool
 buttonPressed' (ActiveMap a) i = a !! i
