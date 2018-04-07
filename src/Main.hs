@@ -1,9 +1,17 @@
 module Main where
 
+import qualified Text.Printf as P
 import qualified Opts
 import qualified Streamdeck as SD
+import qualified Data.ByteString as BS
 
 import Prelude
+
+readForever :: SD.Deck -> IO ()
+readForever deck = do
+    newDeck <- SD.readButtonState deck
+    putStrLn $ show $ SD.buttonPressed newDeck 0
+    readForever deck
 
 main :: IO ()
 main = do
@@ -11,5 +19,8 @@ main = do
     decks <- SD.enumerateStreamDecks
     deck  <- SD.openStreamDeck $ head decks
     SD.send deck SD.initializationReport
-    SD.updateDeck deck id
+    _ <- SD.updateDeck deck id
+
+    readForever deck
+
     putStrLn $ decks >>= show

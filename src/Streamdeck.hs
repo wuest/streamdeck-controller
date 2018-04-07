@@ -8,6 +8,7 @@ module Streamdeck ( Deck (..)
                   , writeImage
                   , solidRGB
                   , updateDeck
+                  , readButtonState, buttonPressed
                   ) where
 
 import qualified Data.Bits       as B
@@ -17,9 +18,12 @@ import qualified System.HIDAPI   as HID
 
 import Prelude
 
-data Deck = Deck { ref   :: HID.Device
-                 , state :: DeckState
+data Deck = Deck { ref       :: HID.Device
+                 , state     :: DeckState
+                 , activeMap :: ActiveMap
                  }
+
+newtype ActiveMap = ActiveMap [Bool]
 
 type DeckState = [Page]
 
@@ -129,6 +133,32 @@ page _ _ = BS.pack []
 read :: Deck -> Int -> IO BS.ByteString
 read deck = HID.read (ref deck)
 
+emptyActiveMap :: ActiveMap
+emptyActiveMap = ActiveMap $ take 15 $ cycle [False]
+
+-- Stream Deck reports button state ONLY upon button press/release
+-- Stream Deck will send a 16 byte message, with the following format:
+-- 01 AA BB CC DD EE FF GG HH II JJ KK LL MM NN OO
+-- * Byte 0 being set to 0x01 is static, indicating a "button event" message.
+-- * AA-OO are 1 byte, if the low bit is set, the button is pressed.  Bits 1-7
+--   appear to be unused.
+readButtonState :: Deck -> IO Deck
+readButtonState deck = do
+    currentState <- Streamdeck.read deck 16
+    return deck { activeMap = bytesToActiveMap $ BS.unpack currentState }
+
+bytesToActiveMap :: [DW.Word8] -> ActiveMap
+bytesToActiveMap xs
+    | length xs /= 16 = emptyActiveMap
+    | otherwise = ActiveMap $ map (== 1) $ drop 1 xs
+
+-- TODO: This is a sin, fix it in the future
+buttonPressed :: Deck -> Int -> Bool
+buttonPressed deck i = buttonPressed' (activeMap deck) i
+
+buttonPressed' :: ActiveMap -> Int -> Bool
+buttonPressed' (ActiveMap a) i = a !! i
+
 writeImage :: Deck -> DW.Word8 -> Image -> IO ()
 writeImage deck button img =
     let page1 = BS.take (3 * page1Pixels) img
@@ -156,6 +186,7 @@ openStreamDeck device = HID.withHIDAPI $ do
     deck <- HID.openDeviceInfo device
     return Deck { ref = deck
                 , state = [defaultPage]
+                , activeMap = emptyActiveMap
                 }
 
 drawRow :: Deck -> DW.Word8 -> Row -> IO ()
