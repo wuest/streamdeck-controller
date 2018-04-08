@@ -19,5 +19,5 @@ Made much easier thanks to the work of [Lange][ack_0] on the
 [main_0]:https://www.elgato.com/en/gaming/stream-deck
 [contributing_0]:https://github.com/wuest/streamdeck-controller/blob/master/CONTRIBUTING.md
 [contributing_1]:https://github.com/wuest/streamdeck-controller/blob/master/CONDUCT.md
-[ack_1]:https://github.com/Lange
-[ack_0]:https://github.com/Lange/node-elgato-stream-deck
+[ack_0]:https://github.com/Lange
+[ack_1]:https://github.com/Lange/node-elgato-stream-deck
