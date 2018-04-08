@@ -32,3 +32,6 @@ executable streamdeck-controller
         base       >= 4.11 && < 4.12
       , hidapi     >= 0.1  && < 0.2
       , bytestring >= 0.10 && < 0.11
+      , warp       >= 3.2  && < 3.3
+      , wai        >= 3.2  && < 3.3
+      , http-types >= 0.9  && < 0.13
