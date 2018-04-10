@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html>
+ <head>
+  <meta charset="UTF-8"/>
+  <title>Stream Deck Configurator</title>
+  <link rel="stylesheet" type="text/css" href="/main.css"/>
+ </head>
+ <body>
+  <div id="main"></div>
+ </body>
+ <script src="/globals.js"></script>
+ <script src="/main.js"></script>
+ <script>
+var node = document.getElementById('main');
+var app = Elm.Main.embed(node, {
+ webPort:webPort
+});
+ </script>
+</html>
