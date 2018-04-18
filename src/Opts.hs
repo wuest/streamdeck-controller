@@ -7,12 +7,11 @@ module Opts ( Options (..)
 import Prelude
 import System.Console.GetOpt
 
-import qualified Streamdeck         as SD  (vendorID, productID)
-import qualified Data.Word          as DW  (Word16)
-import qualified System.Environment as Env (getProgName, getArgs)
-import qualified System.Exit        as Sys (exitSuccess)
-import qualified System.IO          as IO  (hPutStrLn, stderr)
-import qualified Text.Printf        as P   (printf)
+import qualified Data.Word                  as DW  (Word16)
+import qualified System.Environment         as Env (getProgName, getArgs)
+import qualified System.Exit                as Sys (exitSuccess)
+import qualified System.IO                  as IO  (hPutStrLn, stderr)
+import qualified Text.Printf                as P   (printf)
 
 newtype Options = Options { optVerbose  :: Bool -- Verbosity
                           }
@@ -28,13 +27,17 @@ showUDev _ = do
         , "# See https://github.com/wuest/streamdeck-controller/blob/master/README.md for more"
         , "# information."
         , ""
-        , line "SUBSYSTEM" "usb" SD.vendorID SD.productID
-        , line "KERNEL" "hidraw*" SD.vendorID SD.productID
+        , line "SUBSYSTEM" "usb" vendorID productID
+        , line "KERNEL" "hidraw*" vendorID productID
         ]
     Sys.exitSuccess
   where
     line :: String -> String -> DW.Word16 -> DW.Word16 -> String
     line = P.printf "%s==\"%s\", ATTRS{idVendor}==\"%04x\", ATTRS{idProduct}==\"%04x\", MODE=\"0666\""
+    vendorID :: DW.Word16
+    vendorID = 0x0fd9
+    productID :: DW.Word16
+    productID = 0x0060
 
 defaultOptions :: Options
 defaultOptions = Options { optVerbose  = False

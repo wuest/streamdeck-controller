@@ -1,28 +1,33 @@
 module Main where
 
 import qualified Opts
-import qualified Streamdeck                     as SD
+import qualified System.Hardware.Streamdeck     as SD
 import qualified Control.Concurrent             as Concurrent
 
 import qualified Configurator.Web               as Web
 
+import qualified Data.ByteString                as BS
+import qualified Data.Vector.Unboxed            as Vector
+import qualified Codec.Picture.Repa             as Rep
+
 import Prelude
 
-readForever :: SD.Deck -> IO ()
-readForever deck = do
-    newDeck <- SD.readButtonState deck
-    print $ SD.buttonPressed newDeck 0
-    readForever deck
+readImg = do
+    pic <- Rep.readImageRGB "GoldW.png"
+    return $ case pic of
+        Right p -> BS.pack $ Vector.toList $ Rep.toUnboxed $ Rep.reverseColorChannel p
 
 main :: IO ()
 main = do
     opts  <- Opts.getOpts
     decks <- SD.enumerateStreamDecks
     deck  <- SD.openStreamDeck $ head decks
-    SD.send deck SD.initializationReport
+    SD.sendRaw deck $ SD.setBrightness 99
     _ <- SD.updateDeck deck id
 
     print $ head decks
+    i <- readImg
+    SD.writeImage deck 7 i
 
     -- TODO: Predicate this on configurator being enabled
     clients <- Concurrent.newMVar []
