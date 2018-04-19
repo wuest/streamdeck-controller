@@ -1,14 +1,15 @@
 module Main where
 
-import qualified Opts
+import Control.Monad ( when )
+
 import qualified System.Hardware.Streamdeck     as SD
 import qualified Control.Concurrent             as Concurrent
-
-import qualified Configurator.Web               as Web
-
 import qualified Data.ByteString                as BS
 import qualified Data.Vector.Unboxed            as Vector
 import qualified Codec.Picture.Repa             as Rep
+
+import qualified Opts
+import qualified Configurator.Web               as Web
 
 import Prelude
 
@@ -25,10 +26,12 @@ main = do
     SD.sendRaw deck $ SD.setBrightness 99
     _ <- SD.updateDeck deck id
 
-    print $ head decks
+    print decks
     i <- readImg
     SD.writeImage deck 7 i
 
-    -- TODO: Predicate this on configurator being enabled
-    clients <- Concurrent.newMVar []
-    Web.start clients 3333
+    when (Opts.optWeb opts) $
+        let port = Opts.webPort opts in do
+            putStrLn $ ("Configurator running on port " ++) $ show port
+            clients <- Concurrent.newMVar []
+            Web.start clients port

@@ -3,7 +3,7 @@
 module Opts ( Options (..)
             , getOpts
             ) where
- 
+
 import Prelude
 import System.Console.GetOpt
 
@@ -13,8 +13,19 @@ import qualified System.Exit                as Sys (exitSuccess)
 import qualified System.IO                  as IO  (hPutStrLn, stderr)
 import qualified Text.Printf                as P   (printf)
 
-newtype Options = Options { optVerbose  :: Bool -- Verbosity
-                          }
+data Options = Options { optWeb     :: Bool -- Run configurator webapp
+                       , webPort    :: Int  -- Port on which the webapp runs
+                       , optVerbose :: Bool -- Verbosity
+                       }
+
+defaultOptions :: Options
+defaultOptions = Options { optWeb = False
+                         , webPort = 3333
+                         , optVerbose = False
+                         }
+
+version :: String
+version = "0.0.1"
 
 showUDev :: Options -> IO Options
 showUDev _ = do
@@ -39,13 +50,6 @@ showUDev _ = do
     productID :: DW.Word16
     productID = 0x0060
 
-defaultOptions :: Options
-defaultOptions = Options { optVerbose  = False
-                         }
-
-version :: String
-version = "0.0.1"
-
 printVersion :: Options -> IO Options
 printVersion _ = do
     prg <- Env.getProgName
@@ -58,17 +62,30 @@ printHelp _ = do
     IO.hPutStrLn IO.stderr (usageInfo prg options)
     Sys.exitSuccess
 
+runWeb :: Options -> IO Options
+runWeb opt = return opt { optWeb = True }
+
+setWebPort :: String -> Options -> IO Options
+setWebPort arg opt = return opt { webPort = read arg :: Int }
+
 verbose :: Options -> IO Options
 verbose opt = return opt { optVerbose = True }
 
---Used eventually
---blank :: OptDescr (Options -> IO Options)
---blank = Option [] [] (NoArg return) ""
+blank :: OptDescr (Options -> IO Options)
+blank = Option [] [] (NoArg return) ""
 
 options :: [ OptDescr (Options -> IO Options) ]
 options =
-    [ Option ['d'] ["dbus"]
-        (NoArg showUDev) "Generate udev configuration file for globally accessible Stream Decks"
+    [ Option ['w'] ["web"]
+        (NoArg runWeb) "Run the configurator web application"
+
+    , Option ['p'] ["port"]
+        (ReqArg setWebPort "PORT") "Port to run the web application on (default: 3333)"
+
+    , blank
+
+    , Option ['d'] ["dbus"]
+        (NoArg showUDev) "Generate udev configuration file for globally accessible Stream Decks on Linux"
 
     , Option ['v'] ["verbose"]
         (NoArg verbose) "Enable verbose messages (currently does nothing)"
