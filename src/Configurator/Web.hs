@@ -2,7 +2,6 @@
 
 module Configurator.Web ( start ) where
 
-import Control.Monad          ( forever )
 import Prelude
 
 import qualified Control.Concurrent             as Concurrent
@@ -25,7 +24,7 @@ import qualified Configurator.Const                   as Const
 
 type ClientId   = Int
 type Client     = (ClientId, WS.Connection)
-type ClientList = [Client]
+type ClientList = Concurrent.MVar [Client]
 
 textHtml :: Http.Header
 textHtml = (Http.hContentType, "text/html")
@@ -39,27 +38,27 @@ textCss = (Http.hContentType, "text/css")
 globalJS :: Int -> LBS.ByteString
 globalJS port = LBS.fromStrict . BS.pack $ fmap BS.c2w ("webPort = \"" ++ show port ++ "\";\n")
 
-nextId :: ClientList -> ClientId
+nextId :: [Client] -> ClientId
 nextId = Maybe.maybe 0 (1 +) . maxM . List.map fst
 
 maxM :: Ord a => [a] -> Maybe a
 maxM [] = Nothing
 maxM xs = Just $ maximum xs
 
-connectClient :: WS.Connection -> Concurrent.MVar ClientList -> IO ClientId
+connectClient :: WS.Connection -> ClientList -> IO ClientId
 connectClient conn stateRef = Concurrent.modifyMVar stateRef $ \state -> do
     let clientId = nextId state
     return ((clientId, conn) : state, clientId)
 
-withoutClient :: ClientId -> ClientList -> ClientList
+withoutClient :: ClientId -> [Client] -> [Client]
 withoutClient clientId = List.filter ((/=) clientId . fst)
 
-disconnectClient :: ClientId -> Concurrent.MVar ClientList -> IO ()
+disconnectClient :: ClientId -> ClientList -> IO ()
 disconnectClient clientId stateRef = Concurrent.modifyMVar_ stateRef $ \state ->
     return $ withoutClient clientId state
 
 
-sendFrom :: ClientId -> Concurrent.MVar ClientList -> Text.Text -> IO ()
+sendFrom :: ClientId -> ClientList -> Text.Text -> IO ()
 sendFrom clientId stateRef msg = do
     clients <- Concurrent.readMVar stateRef
     let otherClients = withoutClient clientId clients
@@ -67,7 +66,7 @@ sendFrom clientId stateRef msg = do
         WS.sendTextData conn msg
 
 -- TODO: handle
-startApp :: WS.Connection -> ClientId -> Concurrent.MVar ClientList -> IO ()
+startApp :: WS.Connection -> ClientId -> ClientList -> IO ()
 startApp conn clientId stateRef = Monad.forever $
     WS.receiveData conn >>= sendFrom clientId stateRef
 
@@ -79,7 +78,7 @@ static port request respond = respond $ case Wai.rawPathInfo request of
     "/globals.js" -> Wai.responseLBS Http.status200 [textJs] $ globalJS port
     _             -> Wai.responseLBS Http.status404 [textHtml] "Not found"
 
-server :: Concurrent.MVar ClientList -> WS.ServerApp
+server :: ClientList -> WS.ServerApp
 server stateRef pendingConn = do
     conn <- WS.acceptRequest pendingConn
     clientId <- connectClient conn stateRef
@@ -88,6 +87,7 @@ server stateRef pendingConn = do
         (startApp conn clientId stateRef)
         (disconnectClient clientId stateRef)
 
+start :: ClientList -> Int -> IO ()
 start clients port = do
     let settings = Warp.setPort port $ Warp.setHost "127.0.0.1" Warp.defaultSettings
     Warp.runSettings settings $ WS.websocketsOr
