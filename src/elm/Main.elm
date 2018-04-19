@@ -10,20 +10,16 @@ type alias Model = {}
 
 type alias Flags = {}
 
---main : Program Flags Model Msg
---main = H.programWithFlags
-main : Program Never Model Msg
-main = H.program
+main : Program Flags Model Msg
+main = H.programWithFlags
     { init          = init
     , update        = update
     , view          = view
     , subscriptions = subscriptions
     }
 
---init : Flags -> (Model, Cmd Msg)
---init _ = { } ! []
-init : (Model, Cmd Msg)
-init = { } ! []
+init : Flags -> (Model, Cmd Msg)
+init _ = { } ! []
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update _ _ = { } ! []
