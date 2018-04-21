@@ -4,11 +4,20 @@ import Html            as H
 import Html.Events     as Event
 import Html.Attributes as Attr
 
-type Msg = String
+import Streamdeck.View  as SD
+import Streamdeck.Types as SD
 
-type alias Model = {}
+import Decklist.View  as DL
+import Decklist.Types as DL
+
+type alias Model = { deckList : DL.Decklist
+                   , currentDeck : Maybe SD.Streamdeck
+                   }
 
 type alias Flags = {}
+
+type Msg = SDMsg SD.Msg
+         | DLMsg DL.Msg
 
 main : Program Flags Model Msg
 main = H.programWithFlags
@@ -19,16 +28,20 @@ main = H.programWithFlags
     }
 
 init : Flags -> (Model, Cmd Msg)
-init _ = { } ! []
+init _ = { currentDeck = Nothing
+         , deckList = []
+         } ! []
 
 update : Msg -> Model -> (Model, Cmd Msg)
-update _ _ = { } ! []
+update _ m = m ! []
 
 view : Model -> H.Html Msg
-view _ =
+view m =
   H.div []
-    [ H.select []
-      (List.map (\n -> H.option [ Attr.value (toString n) ] [ H.text (toString n) ]) (List.range 1 12))
+    [ H.div []
+      [ H.map DLMsg (DL.root <| .deckList m) ]
+    , H.div []
+      [ H.map SDMsg (SD.root <| .currentDeck m) ]
     ]
 
 subscriptions : Model -> Sub Msg

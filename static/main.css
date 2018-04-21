@@ -1,8 +1,26 @@
-html, body {
+html, body
+{
  margin:0;
  height:100%;
 }
 
-div#main {
+div#main
+{
  position: absolute;
+}
+
+table.deck td
+{
+ width:72px;
+ height:72px;
+}
+
+table.deck td.odd
+{
+ background: #333;
+}
+
+table.deck td.even
+{
+ background: #000;
 }
