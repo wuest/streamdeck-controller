@@ -9,4 +9,4 @@ root xs =
     select [ class "decklist" ] <|
         case xs of
             [] -> [ option  [ value "", disabled True, selected True ] [ text "(No Streamdecks detected)" ] ]
-            _  -> (List.map (\n -> option [ value <| .serial n ] [ text <| .name n ]) xs)
+            _  -> (List.map (\n -> option [ value <| .serial n ] [ text <| (.name n) ++ " (" ++ (.serial n) ++ ")" ]) xs)

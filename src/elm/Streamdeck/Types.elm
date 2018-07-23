@@ -1,6 +1,6 @@
 module Streamdeck.Types exposing (..)
 
-type Msg = String
+type Msg = Update String
 
 type alias Model = { activeDeck : Streamdeck
                    , activePage : Int

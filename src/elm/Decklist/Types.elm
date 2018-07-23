@@ -1,9 +1,6 @@
 module Decklist.Types exposing (..)
 
-type Msg = String
-
-type alias Model = { deckList : Decklist
-                   }
+type Msg = Conn Decklist
 
 type alias Decklist = List Deckinfo
 

@@ -26,21 +26,24 @@ executable streamdeck-controller
     other-modules:       
         Opts
       , Configurator.Const
+      , Configurator.Json
       , Configurator.Web
     hs-source-dirs:      src
     default-language:    Haskell2010
     build-depends:       
-        base             >= 4.10 && < 4.12
-      , text             >= 1.2  && < 1.3
-      , vector           >= 0.12 && < 0.13
-      , hidapi           >= 0.1  && < 0.2
-      , bytestring       >= 0.10 && < 0.11
-      , warp             >= 3.2  && < 3.3
-      , wai              >= 3.2  && < 3.3
-      , http-types       >= 0.9  && < 0.13
-      , file-embed       >= 0.0  && < 0.1
-      , websockets       >= 0.10 && < 0.12
-      , wai-websockets   >= 3.0  && < 3.1
-      , JuicyPixels      >= 3.2  && < 3.3
-      , JuicyPixels-repa >= 0.7  && < 0.8
-      , streamdeck       >= 0.0  && < 0.1
+        base             >= 4.10  && < 4.12
+      , text             >= 1.2   && < 1.3
+      , vector           >= 0.12  && < 0.13
+      , hidapi           >= 0.1   && < 0.2
+      , bytestring       >= 0.10  && < 0.11
+      , warp             >= 3.2   && < 3.3
+      , wai              >= 3.2   && < 3.3
+      , http-types       >= 0.9   && < 0.13
+      , file-embed       >= 0.0   && < 0.1
+      , websockets       >= 0.10  && < 0.12
+      , wai-websockets   >= 3.0   && < 3.1
+      , JuicyPixels      >= 3.2   && < 3.3
+      , JuicyPixels-repa >= 0.7   && < 0.8
+      , streamdeck       >= 0.0.2 && < 0.1
+      , stm              >= 2.4   && < 2.5
+      , aeson            >= 1.0   && < 1.5
