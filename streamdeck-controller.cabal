@@ -33,7 +33,8 @@ executable streamdeck-controller
                     , Const
                     , Routes
                     , Websockets
---                  , Data.Sqlite
+                    , Data.Model
+                    , Data.Sqlite
   build-depends:      base                  >= 4.9  && < 4.13
                     , hidapi                >= 0.1  && < 0.2
                     , text                  >= 1.2  && < 1.3
@@ -55,6 +56,6 @@ executable streamdeck-controller
                     , time                  >= 1.8  && < 1.10
                     , monad-logger          >= 0.3  && < 0.4
                     , bytestring            >= 0.10 && < 0.11
---                  , persistent            >= 2.10 && < 2.11
---                  , persistent-template   >= 2.7  && < 2.8
---                  , persistent-sqlite     >= 2.10 && < 2.11
+                    , persistent            >= 2.10 && < 2.11
+                    , persistent-template   >= 2.7  && < 2.8
+                    , persistent-sqlite     >= 2.10 && < 2.11
